@@ -1,0 +1,122 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+*.log
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS 2015/2017 cache/options directory
+.vs/
+.vscode/
+
+# Visual Studio Code settings
+.history/
+*.code-workspace
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NCrunch
+.ncrunch*
+*.ncrunchproject
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+
+# Visual Studio Trace Files
+*.e2e
+
+# Microsoft Fakes
+FakesAssemblies/
+
+# Node.js Tools for Visual Studio
+node_modules/
+
+# Webpack/Babel/other JS build tools
+dist/
+bower_components/
+jspm_packages/
+typings/
+tmp/
+temp/
+
+# NuGet Packages
+*.nupkg
+# The packages folder can be ignored because of Package Restore
+**/packages/*
+!**/packages/build/
+!**/packages/repositories.config
+
+# Paket dependency manager
+.paket/
+paket-files/
+
+# Azure Web Apps publish settings
+PublishProfiles/
+
+# Rider & JetBrains
+.idea/
+*.sln.iml
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# DotCover
+*.dotCover
+
+# Backup & OS files
+*.bak
+*.swp
+*.tmp
+~$*
+Thumbs.db
+Desktop.ini
+
+# Crash reports
+*.stackdump
+
+# IIS Express
+*.vspscc
+*.vssscc
+*.scc
+.vsconfig
+
+# Entity Framework
+*.dbmdl
+
+# Local SQL Server files
+*.mdf
+*.ldf
+
+# Docker
+docker-compose.*
+Dockerfile.*
+
+# Mac files
+.DS_Store
+
+# Others you may need
+*.cache
+*.pdb
+
+# Coverage & Analysis
+coverage*
+coverage/
+TestResults/
+TestOutput/
+
+# Ignore secrets/settings files
+appsettings.Development.json
+appsettings.Local.json
+
+# Your custom rules (add below if needed)
