@@ -1,52 +1,96 @@
-﻿MTRoxiesAssistorSolution
-An open-source, Docker-based MTProto Proxy Manager for Telegram with Dynamic Port Management, Sponsor Channel Support, Snd Fake Domain for Anti-Filtering.
+﻿# MTRoxiesAssistorSolution
 
+An open-source, Docker-based **MTProto Proxy Manager** for Telegram with:
 
-Features
+- Dynamic Port Allocation  
+- Sponsor Channel Support  
+- Fake Domain for Anti-Filtering  
 
-Manage Multiple MTProto ProxiesUusing Single Container.
-Support For Fake Domain to Enhance Anti-Filtering.
-Automatic SSL Setup With Let's Encrypt.
-Web Interface For Initial Configuration And Proxy Management.
-Integration With @MTProxybot For Proxy Registration And Sponsorship.
-Random Port Selection For Ease of use.
-Fully Automated Setup And Management.
+Access your proxies easily through a simple web interface.
 
+---
 
-Prerequisites
+## ✨ Features
 
-Ubuntu 22.04
-Docker and Docker Compose
-A Server with a Public IP
-A Telegram Bot Token From @BotFather
+- ✅ Manage multiple MTProto proxies in a single container  
+- 🔒 Support for **Fake Domains** to bypass filtering  
+- 🔐 Automatic **SSL setup** with Let's Encrypt  
+- 🌐 **Web UI** for configuration and proxy management  
+- 🤖 Integration with [@MTProxybot](https://t.me/MTProxybot) for registration and sponsorship  
+- 🎲 Random port selection  
+- ⚙️ Fully automated setup & management  
 
-Installation
+---
 
-Clone The Repository:git clone https://github.com/ali80da/mtroxies.git
+## 📦 Prerequisites
+
+- Ubuntu 22.04  
+- Docker & Docker Compose  
+- A server with a public IP address  
+- Telegram Bot Token from [@BotFather](https://t.me/BotFather)  
+
+---
+
+## 🚀 Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/ali80da/mtroxies.git
 cd mtroxies
+```
 
+### 2. Run the setup script
 
-Run The Setup Script:chmod +x setup.sh
+```bash
+chmod +x setup.sh
 ./setup.sh
+```
 
+---
 
-Access The Web Interface at http://<server-ip> to Configure The Subdomain, Mail, UserName And Telegram Bot Token.
-After Configuration, use The Web Interface at https://<subdomain> to Manage Proxies.
+## 🌐 Web Interface
 
-Usage
+- After installation, visit:  
+  `http://<server-ip>`  
+  to configure your:
+  - Subdomain  
+  - Email  
+  - Admin Username  
+  - Telegram Bot Token  
 
-Initial Setup: Enter Your Subdomain, Mail, UserName And Telegram Bot Token in The Setup Program.
-Create a Proxy: Specify a Port (or use random), Telegram Channel ID, And an Optional Fake Domain (e.g., domain.com).
-View Proxies: List all active proxies with their Telegram links.
-Delete a Proxy: Remove a Proxy by Port.
+- Once configured, access your dashboard at:  
+  `https://<your-subdomain>`
 
-Project Structure
+---
 
+## ⚙️ Usage
+
+- **Initial Setup:**  
+  Enter subdomain, mail, username, and bot token via setup UI.
+
+- **Create a Proxy:**  
+  Specify:
+  - Port (or choose random)
+  - Telegram Channel ID
+  - *(Optional)* Fake Domain (e.g. `domain.com`)
+
+- **View Proxies:**  
+  List of all active proxies with clickable Telegram links.
+
+- **Delete a Proxy:**  
+  Remove any proxy by its port number.
+
+---
+
+## 📁 Project Structure
+
+```
 mtroxies/
 ├── Sources/
-│   ├── Roxi.Core/          # Core LOGIC
-│   ├── Roxi.Web/           # API
-│   ├── Roxi.Client/        # Web Interface (UI)
+│   ├── Roxi.Core/          # Core logic
+│   ├── Roxi.Web/           # API layer
+│   ├── Roxi.Client/        # Web interface (UI)
 ├── Configs/
 │   ├── nginx.conf
 │   ├── mtproto-config
@@ -56,13 +100,22 @@ mtroxies/
 │   ├── CHANGELOG.md
 ├── docker-compose.yml
 └── setup.sh
+```
 
-Contributing
-Contributions are Welcome! Please Submit Pull Requests or Issues on GitHub.
+---
 
+## 🤝 Contributing
 
-License
+Contributions are welcome!  
+Please feel free to submit a [pull request](https://github.com/ali80da/mtroxies/pulls) or open an [issue](https://github.com/ali80da/mtroxies/issues) on GitHub.
 
+---
 
+## 📄 License
+
+This project is licensed under the **MIT License**.  
+See the `LICENSE` file for more details.
+
+---
 
 
