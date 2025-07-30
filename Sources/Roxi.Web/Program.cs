@@ -1,5 +1,7 @@
 /* MTRoxies */
 
+using Roxi.Web.Middleware.MainGates;
+
 var builder = WebApplication.CreateBuilder(args);
 {
 
@@ -17,7 +19,7 @@ var app = builder.Build();
 {
 
 
-    // Configure the HTTP request pipeline.
+    // Configure The HTTP Request Pipeline
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
@@ -26,7 +28,15 @@ var app = builder.Build();
 
     app.UseHttpsRedirection();
 
+    app.UseRouting();
+
+    app.UseAuthentication();
     app.UseAuthorization();
+
+
+    // Add Custom Gate Middleware 4 request/response
+    app.UseMiddleware<RequestGateMiddleware>();
+    app.UseMiddleware<ResponseGateMiddleware>();
 
     app.MapControllers();
 
