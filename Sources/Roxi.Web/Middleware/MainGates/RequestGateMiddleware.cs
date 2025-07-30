@@ -39,7 +39,7 @@ public class RequestGateMiddleware(RequestDelegate Next, ILogger<RequestGateMidd
         }
 
         // Validate specific headers (e.g., Authorization)
-        if (!request.Headers.ContainsKey("Authorization") && request.Path.StartsWithSegments("/roxi/v-one/roxies"))
+        if (!request.Headers.ContainsKey("Authorization") && request.Path.StartsWithSegments("/roxi/v-one"))
         {
             logBuilder.AppendLine("Warning: Authorization header is missing.");
             Logger.LogWarning(logBuilder.ToString());
