@@ -9,7 +9,7 @@ namespace Roxi.Web.Areas.Version01.Controllers;
 public class ProxiesController : SharedV01Controller
 {
 
-    [HttpGet("roxies")]
+    [HttpGet("mtroxies")]
     public IActionResult Proxies()
     {
         return Ok(new

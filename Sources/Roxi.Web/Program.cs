@@ -79,8 +79,8 @@ var app = builder.Build();
 
 
     // Add Custom Gate Middleware 4 request/response
-    //app.UseMiddleware<RequestGateMiddleware>();
-    //app.UseMiddleware<ResponseGateMiddleware>();
+    app.UseMiddleware<RequestGateMiddleware>();
+    app.UseMiddleware<ResponseGateMiddleware>();
 
     app.MapControllers();
     //app.UseEndpoints(endpoints => endpoints.MapControllers());
