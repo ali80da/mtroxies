@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Roxi.Core.Models.Proxies;
 
@@ -10,17 +6,19 @@ namespace Roxi.Core.Models.Proxies;
 /// <summary>
 /// Represents the request model for creating a new proxy.
 /// </summary>
-public class CreateProxyRequest
+public record CreateProxyRequest
 {
     /// <summary>
     /// The Telegram sponsor channel (e.g., @MyChannel).
     /// </summary>
-    public string SponsorChannel { get; set; } = string.Empty;
+    [RegularExpression(@"^@[A-Za-z0-9_]{5,}$", ErrorMessage = "SponsorChannel must be a valid Telegram channel (e.g., @Channel).")]
+    public required string SponsorChannel { get; set; }
 
     /// <summary>
     /// Optional fake domain for anti-filtering (e.g., domain.com).
     /// </summary>
-    public string FakeDomain { get; set; } = string.Empty;
+    [RegularExpression(@"^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$", ErrorMessage = "FakeDomain must be a valid domain (e.g., domain.com).")]
+    public string? FakeDomain { get; set; } = string.Empty;
 }
 
 

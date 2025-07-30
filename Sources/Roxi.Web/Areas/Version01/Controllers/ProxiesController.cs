@@ -19,8 +19,10 @@ public class ProxiesController : SharedV01Controller
             {
                 new ProxyConfig
                 {
+                    Id = "",
                     Port = 8080,
                     SponsorChannel = "@exampleChannel",
+                    Secret = "",
                     FakeDomain = "example.com"
                 }
             },

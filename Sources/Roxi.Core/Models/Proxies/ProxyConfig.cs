@@ -1,38 +1,32 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Roxi.Core.Models.Proxies;
 
-/// <summary>
-/// Represents the configuration of an MTProto proxy.
-/// </summary>
-public class ProxyConfig
+public record ProxyConfig
 {
-    /// <summary>
-    /// The port used by the proxy.
-    /// </summary>
-    public int Port { get; set; }
 
-    /// <summary>
-    /// The secret key for the proxy.
-    /// </summary>
-    public string Secret { get; set; } = string.Empty;
+    [JsonIgnore]
+    public required string Id { get; init; } = Guid.NewGuid().ToString();
 
-    /// <summary>
-    /// The Telegram sponsor channel (e.g., @MyChannel).
-    /// </summary>
-    public string SponsorChannel { get; set; } = string.Empty;
+    [Required]
+    [Range(1, 65535, ErrorMessage = "Port must be between 1 and 65535.")]
+    public int Port { get; init; }
 
-    /// <summary>
-    /// The fake domain for anti-filtering (e.g., domain.com).
-    /// </summary>
-    public string FakeDomain { get; set; } = string.Empty;
+    [RegularExpression(@"^[0-9a-f]{32}$", ErrorMessage = "Secret must be a 32-character hexadecimal string.")]
+    public required string Secret { get; init; }
 
-    /// <summary>
-    /// The timestamp when the proxy was created.
-    /// </summary>
-    public DateTime CreatedAt { get; set; }
+    [RegularExpression(@"^@[A-Za-z0-9_]{5,}$", ErrorMessage = "SponsorChannel must be a valid Telegram channel (e.g., @Channel).")]
+    public required string SponsorChannel { get; init; }
+
+    [RegularExpression(@"^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$", ErrorMessage = "FakeDomain must be a valid domain (e.g., domain.com).")]
+    public string? FakeDomain { get; init; } = string.Empty;
+
+    public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
+
+    public bool IsActive { get; init; } = true;
+
+    [JsonIgnore]
+    public string? EncryptedSecret { get; init; } = string.Empty;
 }
