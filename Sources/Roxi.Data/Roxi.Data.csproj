@@ -7,14 +7,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Docker.DotNet" Version="3.125.15" />
-        <PackageReference Include="Telegram.Bot" Version="22.6.0" />
-
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.18" />
         <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Roxi.Data\Roxi.Data.csproj" />
+      <Folder Include="Entities\Common\" />
     </ItemGroup>
 
 </Project>

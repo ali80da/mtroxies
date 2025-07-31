@@ -1,128 +1,122 @@
-﻿using System.Text;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics;
+using System.Text;
 
-namespace Roxi.Web.Middleware.MainGates;
-
-public class RequestGateMiddleware
+namespace Roxi.Web.Middleware.MainGates
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<RequestGateMiddleware> _logger;
-    private const int MaxBodySize = 1024 * 1024; // 1MB limit for request body
-
-    public RequestGateMiddleware(RequestDelegate next, ILogger<RequestGateMiddleware> logger)
+    public class RequestGateMiddleware(RequestDelegate Next, ILogger<RequestGateMiddleware> Logger, IConfiguration Configuration)
     {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+        private readonly RequestDelegate Next = Next ?? throw new ArgumentNullException(nameof(Next));
+        private readonly ILogger<RequestGateMiddleware> Logger = Logger ?? throw new ArgumentNullException(nameof(Logger));
+        private readonly long MaxRequestBodySize = Configuration.GetValue<long>("RequestGate:MaxRequestBodySize", 1024 * 1024);
 
-    /// <summary>
-    /// Processes incoming HTTP requests, logs details, and validates headers.
-    /// </summary>
-    /// <param name="context">The HTTP context of the request.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task InvokeAsync(HttpContext context)
-    {
-        var requestId = Guid.NewGuid().ToString();
-        var request = context.Request;
-        var logBuilder = new StringBuilder(512); // Initial capacity to reduce allocations
 
-        // Log request details
-        AppendRequestInfo(logBuilder, context, requestId);
-
-        // Log headers
-        AppendHeaders(logBuilder, request.Headers);
-
-        // Log query parameters
-        if (request.Query.Count > 0)
+        #region Core Middleware Logic
+        
+        public async Task InvokeAsync(HttpContext context)
         {
-            AppendQueryParameters(logBuilder, request.Query);
-        }
+            // Generate unique RequestId and retrieve or generate CorrelationId
+            var requestId = Guid.NewGuid().ToString();
+            var correlationId = context.Request.Headers["X-Correlation-Id"].FirstOrDefault() ?? Guid.NewGuid().ToString();
+            context.Items["RequestId"] = requestId;
+            context.Items["CorrelationId"] = correlationId;
 
-        // Log request body for POST/PUT if applicable
-        string? body = null;
-        if (IsBodyReadable(request))
-        {
-            body = await ReadRequestBodyAsync(request);
-            if (!string.IsNullOrEmpty(body))
+            // Start performance tracking
+            var stopwatch = Stopwatch.StartNew();
+
+            try
             {
-                logBuilder.AppendLine($"Body: {body}");
+                #region Request Tracking
+
+                // Add CorrelationId to response headers
+                context.Response.Headers.Append("X-Correlation-Id", correlationId);
+                #endregion
+
+                #region Request Body Processing
+                // Enable buffering to read request body
+                context.Request.EnableBuffering();
+
+                // Read request body if present
+                string requestBody = string.Empty;
+                if (context.Request.Body.CanRead && context.Request.ContentLength.HasValue)
+                {
+                    if (context.Request.ContentLength > MaxRequestBodySize)
+                    {
+                        Logger.LogWarning("Request ID {RequestId}: Request body size {ContentLength} exceeds limit {MaxSize}.",
+                            requestId, context.Request.ContentLength, MaxRequestBodySize);
+                        context.Response.StatusCode = StatusCodes.Status413PayloadTooLarge;
+                        await context.Response.WriteAsync("Request body too large.");
+                        return;
+                    }
+
+                    using var reader = new StreamReader(
+                        context.Request.Body,
+                        Encoding.UTF8,
+                        detectEncodingFromByteOrderMarks: false,
+                        leaveOpen: true);
+                    requestBody = await reader.ReadToEndAsync();
+                    context.Request.Body.Position = 0; // Reset stream position
+                }
+                #endregion
+
+                #region Security Checks
+                // Validate critical headers
+                if (!context.Request.Headers.ContainsKey("Accept"))
+                {
+                    Logger.LogWarning("Request ID {RequestId}: Missing 'Accept' header.", requestId);
+                }
+                if (context.Request.ContentType != null && !context.Request.ContentType.Contains("application/json"))
+                {
+                    Logger.LogWarning("Request ID {RequestId}: Invalid Content-Type {ContentType}. Expected application/json.",
+                        requestId, context.Request.ContentType);
+                }
+                #endregion
+
+                #region Request Logging
+                // Log request details
+                Logger.LogInformation(
+                    "Request ID: {RequestId}, Correlation ID: {CorrelationId}\n" +
+                    "Timestamp: {Timestamp}\n" +
+                    "Method: {Method}\n" +
+                    "Path: {Path}\n" +
+                    "Query String: {QueryString}\n" +
+                    "Remote IP: {RemoteIp}\n" +
+                    "User-Agent: {UserAgent}\n" +
+                    "Headers: {Headers}\n" +
+                    "Body: {Body}",
+                    requestId,
+                    correlationId,
+                    DateTime.UtcNow.ToString("o"),
+                    context.Request.Method,
+                    context.Request.Path,
+                    context.Request.QueryString,
+                    context.Connection.RemoteIpAddress?.ToString() ?? "Unknown",
+                    context.Request.Headers["User-Agent"].ToString(),
+                    string.Join("\n  ", context.Request.Headers.Select(h => $"{h.Key}: {h.Value}")),
+                    requestBody);
+                #endregion
+
+                #region Pipeline Continuation
+                // Continue to next middleware
+                await Next(context);
+                #endregion
+
+                #region Performance Logging
+                // Log request completion and duration
+                stopwatch.Stop();
+                Logger.LogInformation("Request ID {RequestId}: Completed in {ElapsedMilliseconds}ms with status code {StatusCode}.",
+                    requestId, stopwatch.ElapsedMilliseconds, context.Response.StatusCode);
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                #region Error Handling
+                // Log errors and rethrow to allow error handling by subsequent middleware
+                Logger.LogError(ex, "Request ID {RequestId}: Error processing request.", requestId);
+                throw;
+                #endregion
             }
         }
-
-        // Log the request details
-        _logger.LogInformation("{RequestDetails}", logBuilder.ToString());
-
-        // Add Request ID to response headers
-        context.Response.Headers.Append("X-Request-Id", requestId);
-
-        await _next(context);
-    }
-
-    private static void AppendRequestInfo(StringBuilder logBuilder, HttpContext context, string requestId)
-    {
-        logBuilder.AppendLine($"Request ID: {requestId}");
-        logBuilder.AppendLine($"Timestamp: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
-        logBuilder.AppendLine($"Method: {context.Request.Method}");
-        logBuilder.AppendLine($"Path: {context.Request.Path}");
-        logBuilder.AppendLine($"Query String: {context.Request.QueryString}");
-        logBuilder.AppendLine($"Remote IP: {context.Connection.RemoteIpAddress?.ToString() ?? "Unknown"}");
-        logBuilder.AppendLine($"User-Agent: {context.Request.Headers["User-Agent"]}");
-    }
-
-    private static void AppendHeaders(StringBuilder logBuilder, IHeaderDictionary headers)
-    {
-        logBuilder.AppendLine("Headers:");
-        foreach (var header in headers)
-        {
-            // Skip sensitive headers (e.g., Authorization) to prevent logging sensitive data
-            if (string.Equals(header.Key, "Authorization", StringComparison.OrdinalIgnoreCase))
-            {
-                logBuilder.AppendLine($"  {header.Key}: [REDACTED]");
-            }
-            else
-            {
-                logBuilder.AppendLine($"  {header.Key}: {header.Value}");
-            }
-        }
-    }
-
-    private static void AppendQueryParameters(StringBuilder logBuilder, IQueryCollection query)
-    {
-        logBuilder.AppendLine("Query Parameters:");
-        foreach (var param in query)
-        {
-            logBuilder.AppendLine($"  {param.Key}: {param.Value}");
-        }
-    }
-
-    private static bool IsBodyReadable(HttpRequest request)
-    {
-        return request.Body.CanRead &&
-               (string.Equals(request.Method, "POST", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(request.Method, "PUT", StringComparison.OrdinalIgnoreCase)) &&
-               request.ContentLength is > 0 and <= MaxBodySize &&
-               request.ContentType?.StartsWith("application/json", StringComparison.OrdinalIgnoreCase) == true;
-    }
-
-    private static async Task<string?> ReadRequestBodyAsync(HttpRequest request)
-    {
-        request.EnableBuffering();
-        try
-        {
-            using var reader = new StreamReader(
-                request.Body,
-                Encoding.UTF8,
-                detectEncodingFromByteOrderMarks: false,
-                bufferSize: 1024,
-                leaveOpen: true);
-            var body = await reader.ReadToEndAsync();
-            request.Body.Position = 0;
-            return body.Length > MaxBodySize ? body[..MaxBodySize] : body;
-        }
-        catch (Exception)
-        {
-            return null;
-        }
+        
+        #endregion
     }
 }
