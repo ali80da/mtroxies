@@ -10,6 +10,10 @@ namespace Roxi.Core.Services.V01.Nginx
     {
 
 
+        Task UpdateMtProtoConfigAsync();
+        Task AppendNginxConfigAsync(int port);
+        Task RemoveNginxConfigAsync(int port);
+
     }
 
 

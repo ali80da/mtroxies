@@ -19,35 +19,27 @@ public enum ResultStatus
 /// <summary>
 /// Represents a detailed error in an API response.
 /// </summary>
-public class ErrorDetail
+public class ErrorDetail(string title, string message, string? resolution = null, string? target = null)
 {
     /// <summary>
     /// The error code identifying the specific issue.
     /// </summary>
-    public string Code { get; set; }
+    public string Title { get; set; } = title;
 
     /// <summary>
     /// A human-readable error message.
     /// </summary>
-    public string Message { get; set; }
+    public string Message { get; set; } = message;
 
     /// <summary>
     /// Suggested resolution for the error.
     /// </summary>
-    public string Resolution { get; set; }
+    public string Resolution { get; set; } = resolution!;
 
     /// <summary>
     /// Optional field indicating the property or parameter causing the error.
     /// </summary>
-    public string Target { get; set; }
-
-    public ErrorDetail(string code, string message, string resolution = null, string target = null)
-    {
-        Code = code;
-        Message = message;
-        Resolution = resolution;
-        Target = target;
-    }
+    public string Target { get; set; } = target!;
 }
 
 /// <summary>
@@ -75,65 +67,52 @@ public class ResultMetadata
 /// Represents a standardized API response structure.
 /// </summary>
 /// <typeparam name="T">The type of data included in the response.</typeparam>
-public class ResultConditions<T>
+public class ResultConditions<T>(T data, ResultStatus status, HttpStatusCode httpStatusCode, string message, string? description = null, List<string>? recommendedActions = null, List<ErrorDetail>? errors = null, ResultMetadata? metadata = null)
 {
     /// <summary>
     /// The status of the response (Success, Error, Warning).
     /// </summary>
-    public ResultStatus Status { get; set; }
+    public ResultStatus Status { get; set; } = status;
 
     /// <summary>
     /// The HTTP status code corresponding to the response.
     /// </summary>
-    public HttpStatusCode HttpStatusCode { get; set; }
+    public HttpStatusCode HttpStatusCode { get; set; } = httpStatusCode;
 
     /// <summary>
     /// The primary data returned by the API.
     /// </summary>
-    public T Data { get; set; }
+    public T Data { get; set; } = data;
 
     /// <summary>
     /// A human-readable message describing the response.
     /// </summary>
-    public string Message { get; set; }
+    public string Message { get; set; } = message;
 
     /// <summary>
     /// A detailed description of the response, providing additional context or information.
     /// </summary>
-    public string Description { get; set; }
+    public string Description { get; set; } = description ?? "No additional description provided.";
 
     /// <summary>
     /// A list of recommended actions for the user or developer to resolve issues or optimize usage.
     /// </summary>
-    public List<string> RecommendedActions { get; set; } = new List<string>();
+    public List<string> RecommendedActions { get; set; } = recommendedActions ?? new List<string>();
 
     /// <summary>
     /// A list of detailed errors, if any.
     /// </summary>
-    public List<ErrorDetail> Errors { get; set; } = new List<ErrorDetail>();
+    public List<ErrorDetail> Errors { get; set; } = errors ?? new List<ErrorDetail>();
 
     /// <summary>
     /// Metadata providing additional context (e.g., pagination, API version).
     /// </summary>
-    public ResultMetadata Metadata { get; set; } = new ResultMetadata();
+    public ResultMetadata Metadata { get; set; } = metadata ?? new ResultMetadata();
 
     /// <summary>
     /// The timestamp when the response was generated.
     /// </summary>
-    public DateTime Timestamp { get; set; }
-
-    public ResultConditions(T data, ResultStatus status, HttpStatusCode httpStatusCode, string message, string description = null, List<string> recommendedActions = null, List<ErrorDetail> errors = null, ResultMetadata metadata = null)
-    {
-        Data = data;
-        Status = status;
-        HttpStatusCode = httpStatusCode;
-        Message = message;
-        Description = description ?? "No additional description provided.";
-        RecommendedActions = recommendedActions ?? new List<string>();
-        Errors = errors ?? new List<ErrorDetail>();
-        Metadata = metadata ?? new ResultMetadata();
-        Timestamp = DateTime.UtcNow;
-    }
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
     #region Factory Methods (v1)
 
@@ -147,7 +126,7 @@ public class ResultConditions<T>
     /// <param name="recommendedActions">Optional list of recommended actions for the user.</param>
     /// <param name="metadata">Optional metadata for the response.</param>
     /// <returns>A ResultConditions indicating success.</returns>
-    public static ResultConditions<T> Success(T data, string message, string code, string description = null, List<string> recommendedActions = null, ResultMetadata metadata = null)
+    public static ResultConditions<T> Success(T data, string message, string code, string? description = null, List<string>? recommendedActions = null, ResultMetadata? metadata = null)
     {
         return new ResultConditions<T>(
             data,
@@ -172,10 +151,10 @@ public class ResultConditions<T>
     /// <param name="target">Optional field indicating the property or parameter causing the error.</param>
     /// <param name="httpStatusCode">The HTTP status code (default: 400 BadRequest).</param>
     /// <returns>A ResultConditions indicating an error.</returns>
-    public static ResultConditions<T> Error(string message, string code, string description = null, List<string> recommendedActions = null, string resolution = null, string target = null, HttpStatusCode httpStatusCode = HttpStatusCode.BadRequest)
+    public static ResultConditions<T> Error(string message, string code, string? description = null, List<string>? recommendedActions = null, string? resolution = null, string? target = null, HttpStatusCode httpStatusCode = HttpStatusCode.BadRequest)
     {
         return new ResultConditions<T>(
-            default,
+            default!,
             ResultStatus.Error,
             httpStatusCode,
             message,
@@ -197,7 +176,7 @@ public class ResultConditions<T>
     /// <param name="target">Optional field indicating the property or parameter causing the warning.</param>
     /// <param name="httpStatusCode">The HTTP status code (default: 200 OK).</param>
     /// <returns>A ResultConditions indicating a warning.</returns>
-    public static ResultConditions<T> Warning(T data, string message, string code, string description = null, List<string> recommendedActions = null, string resolution = null, string target = null, HttpStatusCode httpStatusCode = HttpStatusCode.OK)
+    public static ResultConditions<T> Warning(T data, string message, string code, string? description = null, List<string>? recommendedActions = null, string? resolution = null, string? target = null, HttpStatusCode httpStatusCode = HttpStatusCode.OK)
     {
         return new ResultConditions<T>(
             data,

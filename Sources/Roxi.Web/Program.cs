@@ -1,7 +1,10 @@
 ﻿using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Roxi.Core.Models.V01.Proxies;
 using Roxi.Core.Services.V01.Proxie;
+using Roxi.Core.Services.V01.Robot;
+using Roxi.Core.Validators;
 using Roxi.Data.Context;
 using Roxi.Web.Middleware.MainGates;
 
@@ -63,7 +66,14 @@ builder.Services.AddMemoryCache();
 
 // Services
 builder.Services.AddScoped<IProxiService, ProxiService>();
+//builder.Services.AddSingleton<ITeleRobotService, TeleRobotService>();
 
+// Validators
+builder.Services.AddScoped<IValidator<CreateProxiRequest>, CreateProxiRequestValidator>();
+builder.Services.AddScoped<IValidator<UpdateProxiRequest>, UpdateProxiRequestValidator>();
+builder.Services.AddScoped<IValidator<Proxi>, ProxiValidator>();
+
+//builder.Services.AddScoped<IValidator<TeleRobotService.RegisterProxyRequest>, TeleValidator>();
 
 // Ripositories
 
