@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text.Json.Serialization;
 
-namespace Roxi.Core.Models.Common;
+namespace Roxi.Core.Models.V01.Common;
 
 /// <summary>
 /// Represents the status of an API response.

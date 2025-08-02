@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace Roxi.Core.Models.Proxies;
+namespace Roxi.Core.Models.V01.Proxies;
 
 public record Proxi
 {
@@ -15,10 +15,10 @@ public record Proxi
     public int Port { get; init; }
 
     [RegularExpression(@"^[0-9a-f]{32}$", ErrorMessage = "Secret must be a 32-character hexadecimal string.")]
-    public string Secret { get; init; }
+    public string Secret { get; init; } = string.Empty;
 
     [RegularExpression(@"^@[A-Za-z0-9_]{5,}$", ErrorMessage = "SponsorChannel must be a valid Telegram channel (e.g., @Channel).")]
-    public string SponsorChannel { get; init; }
+    public string SponsorChannel { get; init; } = string.Empty;
 
     [RegularExpression(@"^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$", ErrorMessage = "FakeDomain must be a valid domain (e.g., domain.com).")]
     public string? FakeDomain { get; init; } = string.Empty;
@@ -27,7 +27,7 @@ public record Proxi
     public DateTime? UpdatedAt { get; init; }
 
 
-    public string? Region { get; init; }
+    public string? Region { get; init; } = string.Empty;
 
     public bool IsActive { get; init; } = true;
 

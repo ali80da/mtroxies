@@ -1,33 +1,29 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using Roxi.Data.Entities.Common;
 
 namespace Roxi.Data.Entities.Proxi;
 
-public record Proxi
+public record Proxi : ShardEntities
 {
-    public required string Id { get; init; } = Guid.NewGuid().ToString();
+    
 
     [Range(1, 65535, ErrorMessage = "Port must be between 1 and 65535.")]
-    public required int Port { get; init; }
+    public required int Port { get; set; }
 
     [RegularExpression(@"^[0-9a-f]{32}$", ErrorMessage = "Secret must be a 32-character hexadecimal string.")]
-    public required string Secret { get; init; }
+    public required string Secret { get; set; }
 
     [RegularExpression(@"^@[A-Za-z0-9_]{5,}$", ErrorMessage = "SponsorChannel must be a valid Telegram channel (e.g., @Channel).")]
-    public required string SponsorChannel { get; init; }
+    public required string SponsorChannel { get; set; }
 
-    public List<string> Tags { get; init; } = new List<string>();
+    public List<string> Tags { get; set; } = new List<string>();
 
 
     [RegularExpression(@"^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$", ErrorMessage = "FakeDomain must be a valid domain (e.g., domain.com).")]
-    public string? FakeDomain { get; init; } = string.Empty;
-
-    public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; init; }
-
-    public bool IsActive { get; init; } = true;
+    public string? FakeDomain { get; set; } = string.Empty;
 
 
-    public string? Region { get; init; }
-    public string? EncryptedSecret { get; init; } = string.Empty;
+    public string? Region { get; set; }
+    public string? EncryptedSecret { get; set; } = string.Empty;
 }

@@ -13,9 +13,18 @@ public class RoxiDatabaseContext(DbContextOptions<RoxiDatabaseContext> options) 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
-
-
+        modelBuilder.Entity<Proxi>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Port).IsRequired();
+            entity.Property(e => e.Secret).IsRequired();
+            entity.Property(e => e.SponsorChannel).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.Tags)
+                .HasConversion(
+                    v => string.Join(",", v),
+                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
+        });
     }
 
 }

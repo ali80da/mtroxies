@@ -1,14 +1,14 @@
 ﻿using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using Roxi.Core.Services.Proxies;
+using Roxi.Core.Services.V01.Proxie;
 using Roxi.Data.Context;
 using Roxi.Web.Middleware.MainGates;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
-// Add services to DI
+// Add Services to DI
 builder.Services.AddLogging(logging =>
 {
     logging.AddConsole();
@@ -16,16 +16,16 @@ builder.Services.AddLogging(logging =>
     logging.SetMinimumLevel(LogLevel.Information);
 });
 
-// افزودن سرویس‌ها به DI
+// DI
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
         options.JsonSerializerOptions.WriteIndented = true;
     })
-    .AddControllersAsServices(); // پشتیبانی از Areas
+    .AddControllersAsServices(); // Areas
 
-// تنظیمات Swagger/OpenAPI
+// Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -54,18 +54,18 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ثبت دیتابیس
+// Database
 builder.Services.AddDbContext<RoxiDatabaseContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ثبت کش
+// Cache
 builder.Services.AddMemoryCache();
 
-// ثبت سرویس‌ها و ریپازیتوری‌ها
+// Services
 builder.Services.AddScoped<IProxiService, ProxiService>();
 
 
-
+// Ripositories
 
 
 
@@ -97,7 +97,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// افزودن middleware ‌های سفارشی
+// Middlewares
 app.UseMiddleware<RequestGateMiddleware>();
 app.UseMiddleware<ResponseGateMiddleware>();
 

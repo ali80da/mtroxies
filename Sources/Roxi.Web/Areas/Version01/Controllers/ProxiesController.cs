@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Roxi.Core.Models.Common;
-using Roxi.Core.Models.Proxies;
-using Roxi.Core.Services.Proxies;
+using Roxi.Core.Models.V01.Common;
+using Roxi.Core.Models.V01.Proxies;
+using Roxi.Core.Services.V01.Proxie;
 
 namespace Roxi.Web.Areas.Version01.Controllers;
 
