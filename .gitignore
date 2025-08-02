@@ -81,7 +81,10 @@ _ReSharper*/
 ~$*
 Thumbs.db
 Desktop.ini
-
+Thumbs.db
+Desktop-shm
+Thumbs.db
+Desktop-wal
 # Crash reports
 *.stackdump
 
@@ -120,3 +123,7 @@ appsettings.Development.json
 appsettings.Local.json
 
 # Your custom rules (add below if needed)
+
+Migrations/
+roxidb.db*
+

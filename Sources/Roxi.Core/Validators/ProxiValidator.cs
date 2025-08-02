@@ -3,27 +3,9 @@ using Roxi.Core.Models.V01.Proxies;
 
 namespace Roxi.Core.Validators
 {
-    public class CreateProxiRequestValidator : AbstractValidator<CreateProxiRequest>
+    public class CreateAndUpdateProxiRequestValidator : AbstractValidator<CreateAndUpdateProxiRequest>
     {
-        public CreateProxiRequestValidator()
-        {
-            RuleFor(x => x.SponsorChannel)
-                .NotEmpty().WithMessage("Sponsor channel is required.")
-                .Matches(@"^@[A-Za-z0-9_]{5,}$").WithMessage("SponsorChannel must be a valid Telegram channel (e.g., @Channel).");
-
-            RuleFor(x => x.FakeDomain)
-                .Matches(@"^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$")
-                .When(x => !string.IsNullOrEmpty(x.FakeDomain))
-                .WithMessage("FakeDomain must be a valid domain (e.g., domain.com).");
-
-            RuleFor(x => x.Tags)
-                .NotNull().WithMessage("Tags cannot be null.");
-        }
-    }
-
-    public class UpdateProxiRequestValidator : AbstractValidator<UpdateProxiRequest>
-    {
-        public UpdateProxiRequestValidator()
+        public CreateAndUpdateProxiRequestValidator()
         {
             RuleFor(x => x.SponsorChannel)
                 .NotEmpty().WithMessage("Sponsor channel is required.")

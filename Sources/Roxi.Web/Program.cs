@@ -66,14 +66,13 @@ builder.Services.AddMemoryCache();
 
 // Services
 builder.Services.AddScoped<IProxiService, ProxiService>();
-//builder.Services.AddSingleton<ITeleRobotService, TeleRobotService>();
+builder.Services.AddScoped<ITeleRobotService, TeleRobotService>();
 
 // Validators
-builder.Services.AddScoped<IValidator<CreateProxiRequest>, CreateProxiRequestValidator>();
-builder.Services.AddScoped<IValidator<UpdateProxiRequest>, UpdateProxiRequestValidator>();
+builder.Services.AddScoped<IValidator<CreateAndUpdateProxiRequest>, CreateAndUpdateProxiRequestValidator>();
 builder.Services.AddScoped<IValidator<Proxi>, ProxiValidator>();
 
-//builder.Services.AddScoped<IValidator<TeleRobotService.RegisterProxyRequest>, TeleValidator>();
+builder.Services.AddScoped<IValidator<TeleRobotService.RegisterProxyRequest>, TeleValidator>();
 
 // Ripositories
 
@@ -83,11 +82,11 @@ builder.Services.AddScoped<IValidator<Proxi>, ProxiValidator>();
 var app = builder.Build();
 
 // اطمینان از ایجاد دیتابیس
-//using (var scope = app.Services.CreateScope())
-//{
-//    var dbContext = scope.ServiceProvider.GetRequiredService<RoxiDatabaseContext>();
-//    await dbContext.Database.EnsureCreatedAsync();
-//}
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<RoxiDatabaseContext>();
+    await dbContext.Database.EnsureCreatedAsync();
+}
 
 // تنظیمات Pipeline
 if (app.Environment.IsDevelopment())

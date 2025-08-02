@@ -36,7 +36,8 @@ public class ProxiesController : SharedV01Controller
                     Port = 8080,
                     SponsorChannel = "@exampleChannel",
                     Secret = "",
-                    FakeDomain = "example.com"
+                    FakeDomain = "example.com",
+                    Send2Channel = "@sendChannel",
                 }
             },
             Message = "Proxies retrieved successfully."
@@ -60,7 +61,7 @@ public class ProxiesController : SharedV01Controller
     [ProducesResponseType(typeof(ResultConditions<Proxi>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ResultConditions<Proxi>), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ResultConditions<Proxi>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Create([FromBody] CreateProxiRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateAndUpdateProxiRequest request)
     {
         var result = await _proxiService.CreateProxiAsync(request);
         return StatusCode((int)result.HttpStatusCode, result);
@@ -83,7 +84,7 @@ public class ProxiesController : SharedV01Controller
     [ProducesResponseType(typeof(ResultConditions<Proxi>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ResultConditions<Proxi>), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ResultConditions<Proxi>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Update(int port, [FromBody] UpdateProxiRequest request)
+    public async Task<IActionResult> Update(int port, [FromBody] CreateAndUpdateProxiRequest request)
     {
         var result = await _proxiService.UpdateProxiAsync(port, request);
         return StatusCode((int)result.HttpStatusCode, result);

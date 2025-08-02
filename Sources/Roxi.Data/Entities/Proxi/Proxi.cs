@@ -13,12 +13,12 @@ public record Proxi : ShardEntities
 
     [RegularExpression(@"^[0-9a-f]{32}$", ErrorMessage = "Secret must be a 32-character hexadecimal string.")]
     public required string Secret { get; set; }
+    public required string Send2Channel { get; set; } = string.Empty;
 
     [RegularExpression(@"^@[A-Za-z0-9_]{5,}$", ErrorMessage = "SponsorChannel must be a valid Telegram channel (e.g., @Channel).")]
     public required string SponsorChannel { get; set; }
 
     public List<string> Tags { get; set; } = new List<string>();
-
 
     [RegularExpression(@"^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$", ErrorMessage = "FakeDomain must be a valid domain (e.g., domain.com).")]
     public string? FakeDomain { get; set; } = string.Empty;

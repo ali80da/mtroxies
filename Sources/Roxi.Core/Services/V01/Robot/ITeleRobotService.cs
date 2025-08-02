@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net;
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Roxi.Core.Models.V01.Common;
 using Telegram.Bot;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Roxi.Core.Services.V01.Robot
 {
@@ -26,7 +22,7 @@ namespace Roxi.Core.Services.V01.Robot
         /// <param name="secret">The secret key for the proxy.</param>
         /// <param name="sponsorChannel">The Telegram sponsor channel (e.g., @Channel).</param>
         /// <returns>A ResultConditions indicating the registration result.</returns>
-        Task<ResultConditions<bool>> RegisterProxyAsync(int port, string secret, string sponsorChannel);
+        Task<ResultConditions<bool>> RegisterProxyAsync(string channels, int port, string secret, string sponsorChannel);
 
 
     }
@@ -47,16 +43,16 @@ namespace Roxi.Core.Services.V01.Robot
             ILogger<TeleRobotService> logger,
             IValidator<RegisterProxyRequest> validator)
         {
-            _botClient = new TelegramBotClient(configuration["TelegramBotToken"] ?? throw new ArgumentNullException("TelegramBotToken is missing."));
-            _serverIp = configuration["ServerIp"] ?? throw new ArgumentNullException("ServerIp is missing.");
+            _botClient = new TelegramBotClient(configuration["Telegram:BotToken"] ?? throw new ArgumentNullException("TelegramBotToken is missing."));
+            _serverIp = configuration["ServerInfo:Server"] ?? throw new ArgumentNullException("Server is missing.");
             _logger = logger;
             _validator = validator;
         }
 
         /// <summary>
-        /// Registers an MTProto proxy with the specified port, secret, and sponsor channel.
+        /// Registers an MTProto Proxy with the specified Port, Secret, And Sponsor Channel.
         /// </summary>
-        public async Task<ResultConditions<bool>> RegisterProxyAsync(int port, string secret, string sponsorChannel)
+        public async Task<ResultConditions<bool>> RegisterProxyAsync(string channel, int port, string secret, string sponsorChannel)
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation("Registering proxy with Telegram: RequestId={RequestId}, Port={Port}, SponsorChannel={SponsorChannel}", requestId, port, sponsorChannel);
@@ -64,7 +60,7 @@ namespace Roxi.Core.Services.V01.Robot
             try
             {
                 // Validate input
-                var request = new RegisterProxyRequest(port, secret, sponsorChannel);
+                var request = new RegisterProxyRequest(channel, port, secret, sponsorChannel);
                 var validationResult = await _validator.ValidateAsync(request);
                 if (!validationResult.IsValid)
                 {
@@ -86,16 +82,20 @@ namespace Roxi.Core.Services.V01.Robot
                     );
                 }
 
+                var host = "host";
+                var baseChannel = "@mtroxies";
                 // Construct proxy link
                 var proxyLink = $"tg://proxy?server={_serverIp}&port={port}&secret={secret}";
-                var message = $"New MTProto Proxy:\nPort: {port}\nSponsor: {sponsorChannel}\nLink: {proxyLink}";
+                var message = $"New MTProto Proxi:\nServer: {host} \nPort: {port}\nSecret: {secret}\n\n {baseChannel}";
+
+                var replyMarkup = new InlineKeyboardMarkup(new[]
+                {
+                    new[] { InlineKeyboardButton.WithUrl("CONNECT", $"{proxyLink}") }
+                });
 
                 // Send message to sponsor channel
-                //await _botClient.SendTextMessageAsync(
-                //    chatId: sponsorChannel,
-                //    text: message,
-                //    disableWebPagePreview: true
-                //);
+                await _botClient.SendMessage(
+                    chatId: channel, text: message, replyMarkup: replyMarkup);
 
                 _logger.LogInformation("Proxy registered with Telegram: RequestId={RequestId}, Port={Port}, SponsorChannel={SponsorChannel}", requestId, port, sponsorChannel);
                 return ResultConditions<bool>.Success(
@@ -139,7 +139,7 @@ namespace Roxi.Core.Services.V01.Robot
         /// <summary>
         /// Internal record for validating RegisterProxyAsync inputs.
         /// </summary>
-        public record RegisterProxyRequest(int Port, string Secret, string SponsorChannel);
+        public record RegisterProxyRequest(string Channel, int Port, string Secret, string SponsorChannel);
     }
 
 

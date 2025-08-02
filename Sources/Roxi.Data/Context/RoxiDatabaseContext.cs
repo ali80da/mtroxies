@@ -28,3 +28,8 @@ public class RoxiDatabaseContext(DbContextOptions<RoxiDatabaseContext> options) 
     }
 
 }
+
+// in data route
+
+// cmd: dotnet ef migrations add InitialCreate --project ../Roxi.Data --startup-project .
+// cmd: dotnet ef database update --project ../Roxi.Data --startup-project .

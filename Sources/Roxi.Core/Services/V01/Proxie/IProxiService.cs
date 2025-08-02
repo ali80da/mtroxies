@@ -6,6 +6,8 @@ using Roxi.Core.Models.V01.Common;
 using Roxi.Core.Models.V01.Proxies;
 using Roxi.Data.Context;
 using Microsoft.EntityFrameworkCore;
+using Roxi.Core.Services.V01.Robot;
+using System.Threading.Channels;
 
 namespace Roxi.Core.Services.V01.Proxie
 {
@@ -20,7 +22,7 @@ namespace Roxi.Core.Services.V01.Proxie
         /// </summary>
         /// <param name="request">The request containing sponsor channel, fake domain, and tags.</param>
         /// <returns>A ResultConditions containing the created proxy details or an error.</returns>
-        Task<ResultConditions<Proxi>> CreateProxiAsync(CreateProxiRequest request);
+        Task<ResultConditions<Proxi>> CreateProxiAsync(CreateAndUpdateProxiRequest request);
 
         /// <summary>
         /// Updates an existing proxy with the specified port and request data.
@@ -28,7 +30,7 @@ namespace Roxi.Core.Services.V01.Proxie
         /// <param name="port">The port of the proxy to update.</param>
         /// <param name="request">The request containing new sponsor channel, fake domain, and tags.</param>
         /// <returns>A ResultConditions containing the updated proxy details or an error.</returns>
-        Task<ResultConditions<Proxi>> UpdateProxiAsync(int port, UpdateProxiRequest request);
+        Task<ResultConditions<Proxi>> UpdateProxiAsync(int port, CreateAndUpdateProxiRequest request);
 
         /// <summary>
         /// Deletes a proxy with the specified port.
@@ -52,25 +54,22 @@ namespace Roxi.Core.Services.V01.Proxie
     public class ProxiService : IProxiService
     {
         private readonly RoxiDatabaseContext _dbContext;
-        // private readonly ITelegramBotService _telegramBotService;
+        private readonly ITeleRobotService _telegramBotService;
         private readonly ILogger<ProxiService> _logger;
-        private readonly IValidator<CreateProxiRequest> _createValidator;
-        private readonly IValidator<UpdateProxiRequest> _updateValidator;
+        private readonly IValidator<CreateAndUpdateProxiRequest> _createValidator;
         private readonly IValidator<Proxi> _proxiValidator;
 
         public ProxiService(
             RoxiDatabaseContext dbContext,
-            // ITelegramBotService telegramBotService,
+            ITeleRobotService telegramBotService,
             ILogger<ProxiService> logger,
-            IValidator<CreateProxiRequest> createValidator,
-            IValidator<UpdateProxiRequest> updateValidator,
+            IValidator<CreateAndUpdateProxiRequest> createValidator,
             IValidator<Proxi> proxiValidator)
         {
             _dbContext = dbContext;
-            // _telegramBotService = telegramBotService;
+            _telegramBotService = telegramBotService;
             _logger = logger;
             _createValidator = createValidator;
-            _updateValidator = updateValidator;
             _proxiValidator = proxiValidator;
         }
 
@@ -79,7 +78,7 @@ namespace Roxi.Core.Services.V01.Proxie
         /// <summary>
         /// Creates a new MTProto proxy with the specified request data.
         /// </summary>
-        public async Task<ResultConditions<Proxi>> CreateProxiAsync(CreateProxiRequest request)
+        public async Task<ResultConditions<Proxi>> CreateProxiAsync(CreateAndUpdateProxiRequest request)
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation("Creating proxy: RequestId={RequestId}, SponsorChannel={SponsorChannel}, FakeDomain={FakeDomain}", requestId, request.SponsorChannel, request.FakeDomain);
@@ -133,9 +132,10 @@ namespace Roxi.Core.Services.V01.Proxie
                     Port = port,
                     Secret = secret,
                     EncryptedSecret = secret, // Simplified: no encryption
+                    Send2Channel = request.Send2Channel,
                     SponsorChannel = request.SponsorChannel,
                     FakeDomain = request.FakeDomain,
-                    Tags = request.Tags.Any() ? request.Tags : new List<string> { "mtproto" },
+                    Tags = request.Tags.Any() ? request.Tags : new List<string> { "mtroto" },
                     CreatedAt = DateTime.UtcNow,
                     IsActive = true
                 };
@@ -166,13 +166,13 @@ namespace Roxi.Core.Services.V01.Proxie
                 _dbContext.Proxies.Add(entity);
                 await _dbContext.SaveChangesAsync();
 
-                /*
+                
                 // Update MTProto and NGINX configurations
-                await UpdateMtProtoConfigAsync();
-                await AppendNginxConfigAsync(port);
+                //await UpdateMtProtoConfigAsync();
+                //await AppendNginxConfigAsync(port);
 
                 // Register with Telegram
-                var registrationResult = await _telegramBotService.RegisterProxyAsync(port, secret, request.SponsorChannel);
+                var registrationResult = await _telegramBotService.RegisterProxyAsync(entity.Send2Channel, port, secret, request.SponsorChannel);
                 if (registrationResult.Status != ResultStatus.Success)
                 {
                     _logger.LogWarning("Proxy registration failed: RequestId={RequestId}, Message={Message}", requestId, registrationResult.Message);
@@ -190,8 +190,8 @@ namespace Roxi.Core.Services.V01.Proxie
                 }
 
                 // Reload services
-                await ReloadServicesAsync();
-                */
+                //await ReloadServicesAsync();
+                
 
                 var resultDto = MapToDto(entity);
                 _logger.LogInformation("Proxy created: RequestId={RequestId}, Port={Port}, SponsorChannel={SponsorChannel}", requestId, resultDto.Port, resultDto.SponsorChannel);
@@ -235,7 +235,7 @@ namespace Roxi.Core.Services.V01.Proxie
         /// <summary>
         /// Updates an existing proxy with the specified port and request data.
         /// </summary>
-        public async Task<ResultConditions<Proxi>> UpdateProxiAsync(int port, UpdateProxiRequest request)
+        public async Task<ResultConditions<Proxi>> UpdateProxiAsync(int port, CreateAndUpdateProxiRequest request)
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation("Updating proxy: RequestId={RequestId}, Port={Port}, SponsorChannel={SponsorChannel}, FakeDomain={FakeDomain}", requestId, port, request.SponsorChannel, request.FakeDomain);
@@ -243,7 +243,7 @@ namespace Roxi.Core.Services.V01.Proxie
             try
             {
                 // Validate request
-                var validationResult = await _updateValidator.ValidateAsync(request);
+                var validationResult = await _createValidator.ValidateAsync(request);
                 if (!validationResult.IsValid)
                 {
                     var errors = validationResult.Errors.Select(e => new ErrorDetail(
@@ -300,6 +300,7 @@ namespace Roxi.Core.Services.V01.Proxie
                 entity.FakeDomain = request.FakeDomain;
                 entity.Tags = request.Tags.Any() ? request.Tags : entity.Tags.Concat(new[] { "updated" }).Distinct().ToList();
                 entity.UpdatedAt = DateTime.UtcNow;
+                entity.Send2Channel = request.Send2Channel;
 
                 // Validate entity
                 var entityValidationResult = await _proxiValidator.ValidateAsync(MapToDto(entity));
@@ -326,12 +327,11 @@ namespace Roxi.Core.Services.V01.Proxie
                 // Save changes
                 await _dbContext.SaveChangesAsync();
 
-                /*
                 // Update MTProto and NGINX configurations
-                await UpdateMtProtoConfigAsync();
+                //await UpdateMtProtoConfigAsync();
 
                 // Register with Telegram
-                var registrationResult = await _telegramBotService.RegisterProxyAsync(port, entity.Secret, request.SponsorChannel);
+                var registrationResult = await _telegramBotService.RegisterProxyAsync(entity.Send2Channel, port, entity.Secret, request.SponsorChannel);
                 if (registrationResult.Status != ResultStatus.Success)
                 {
                     _logger.LogWarning("Proxy registration failed: RequestId={RequestId}, Message={Message}", requestId, registrationResult.Message);
@@ -349,8 +349,8 @@ namespace Roxi.Core.Services.V01.Proxie
                 }
 
                 // Reload services
-                await ReloadServicesAsync();
-                */
+                //await ReloadServicesAsync();
+                
 
                 var resultDto = MapToDto(entity);
                 _logger.LogInformation("Proxy updated: RequestId={RequestId}, Port={Port}, SponsorChannel={SponsorChannel}", requestId, resultDto.Port, resultDto.SponsorChannel);
@@ -511,6 +511,7 @@ namespace Roxi.Core.Services.V01.Proxie
                 Id = entity.Id,
                 Port = entity.Port,
                 Secret = entity.Secret,
+                Send2Channel = entity.Send2Channel,
                 SponsorChannel = entity.SponsorChannel,
                 FakeDomain = entity.FakeDomain,
                 CreatedAt = entity.CreatedAt,
